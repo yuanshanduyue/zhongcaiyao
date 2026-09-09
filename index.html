@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="本草簿：面向中药学入门的药材检索、分类与随堂练习工具。">
+  <meta name="theme-color" content="#163c31">
+  <title>本草簿 · 中药学习图鉴</title>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://zybb.njucm.edu.cn" crossorigin>
+  <link rel="preconnect" href="https://zh.wikipedia.org" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#herbGrid">跳到药材列表</a>
+
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="本草簿首页">
+      <span class="brand-mark" aria-hidden="true"><i data-lucide="sprout"></i></span>
+      <span>
+        <strong>本草簿</strong>
+        <small>中药学习图鉴</small>
+      </span>
+    </a>
+
+    <nav class="view-switcher" aria-label="内容视图">
+      <button class="view-tab is-active" type="button" data-view="all" aria-pressed="true">
+        <i data-lucide="library"></i><span>药材库</span>
+      </button>
+      <button class="view-tab" type="button" data-view="favorites" aria-pressed="false">
+        <i data-lucide="bookmark"></i><span>收藏</span>
+        <span class="tab-count" id="favoriteCount">0</span>
+      </button>
+    </nav>
+
+    <div class="header-actions">
+      <button class="icon-button mobile-filter-button" id="mobileFilterButton" type="button" title="筛选药材" aria-label="筛选药材">
+        <i data-lucide="sliders-horizontal"></i>
+      </button>
+      <button class="icon-button mobile-view-button" id="mobileViewButton" type="button" title="查看收藏" aria-label="查看收藏">
+        <i data-lucide="bookmark"></i>
+      </button>
+      <button class="button button-secondary" id="quizButton" type="button" title="开始随堂测" aria-label="开始随堂测">
+        <i data-lucide="brain"></i><span>随堂测</span>
+      </button>
+      <button class="button button-primary" id="randomButton" type="button" title="随机识药" aria-label="随机识药">
+        <i data-lucide="shuffle"></i><span>随机识药</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <aside class="filters" id="filtersPanel" aria-label="药材筛选">
+      <div class="filter-heading">
+        <div>
+          <span class="eyebrow">筛选</span>
+          <h2>查找药材</h2>
+        </div>
+        <button class="icon-button mobile-filter-close" id="mobileFilterClose" type="button" title="关闭筛选" aria-label="关闭筛选">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <section class="filter-section" aria-labelledby="categoryLabel">
+        <div class="filter-label" id="categoryLabel">功效分类</div>
+        <div class="category-list" id="categoryList"></div>
+      </section>
+
+      <section class="filter-section" aria-labelledby="natureLabel">
+        <div class="filter-label" id="natureLabel">药性</div>
+        <div class="nature-options" id="natureOptions"></div>
+      </section>
+
+      <label class="check-row">
+        <input type="checkbox" id="verifiedOnly">
+        <span class="custom-check"><i data-lucide="check"></i></span>
+        <span>
+          <strong>仅看详录</strong>
+          <small>显示已录 / 味、归经与注意事项的条目</small>
+        </span>
+      </label>
+
+      <button class="button button-quiet clear-filter" id="clearFilters" type="button">
+        <i data-lucide="rotate-ccw"></i><span>清除筛选</span>
+      </button>
+
+      <div class="source-note">
+        <i data-lucide="graduation-cap"></i>
+        <p>本站用于课堂记忆与索引，不构成诊断、处方或用药建议。</p>
+      </div>
+    </aside>
+
+    <div class="filter-backdrop" id="filterBackdrop" hidden></div>
+
+    <section class="content">
+      <div class="search-row">
+        <label class="search-box" for="searchInput">
+          <i data-lucide="search"></i>
+          <input id="searchInput" type="search" autocomplete="off" aria-label="搜索药材" placeholder="搜索药名、拼音、功效、归经…">
+          <kbd>⌘ K</kbd>
+          <button class="search-clear" id="searchClear" type="button" title="清空搜索" aria-label="清空搜索" hidden>
+            <i data-lucide="circle-x"></i>
+          </button>
+        </label>
+      </div>
+
+      <section class="daily-feature" aria-labelledby="dailyTitle">
+        <div class="daily-image-wrap">
+          <img id="dailyImage" alt="" loading="eager">
+          <div class="daily-fallback" id="dailyFallback" aria-hidden="true"></div>
+        </div>
+        <div class="daily-copy">
+          <span class="eyebrow"><i data-lucide="sun"></i> 今日识药</span>
+          <h1 id="dailyTitle">本草簿</h1>
+          <p class="daily-pinyin" id="dailyPinyin"></p>
+          <p class="daily-efficacy" id="dailyEfficacy"></p>
+          <div class="daily-meta" id="dailyMeta"></div>
+        </div>
+        <button class="round-action" id="dailyOpen" type="button" title="查看今日药材" aria-label="查看今日药材详情">
+          <i data-lucide="arrow-up-right"></i>
+        </button>
+      </section>
+
+      <section class="library-section" aria-labelledby="libraryTitle">
+        <div class="library-header">
+          <div>
+            <span class="eyebrow" id="resultContext">完整药材库</span>
+            <h2 id="libraryTitle"><span id="resultCount">0</span> 味药材</h2>
+          </div>
+          <div class="library-tools">
+            <div class="active-filters" id="activeFilters" aria-label="已选筛选条件"></div>
+            <label class="sort-select">
+              <span class="sr-only">排序方式</span>
+              <i data-lucide="arrow-up-down"></i>
+              <select id="sortSelect">
+                <option value="default">教材顺序</option>
+                <option value="name">药名排序</option>
+                <option value="category">按分类排序</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="herb-grid" id="herbGrid"></div>
+
+        <div class="empty-state" id="emptyState" hidden>
+          <i data-lucide="search-x"></i>
+          <h3>没有找到相符药材</h3>
+          <p>换一个药名、功效词，或减少筛选条件。</p>
+          <button class="button button-secondary" type="button" data-action="reset">重置筛选</button>
+        </div>
+
+        <div class="load-more-wrap" id="loadMoreWrap">
+          <button class="button button-secondary load-more" id="loadMore" type="button">
+            <span>继续浏览</span><i data-lucide="chevron-down"></i>
+          </button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <dialog class="detail-dialog" id="detailDialog">
+    <article class="detail-panel" id="detailPanel"></article>
+  </dialog>
+
+  <dialog class="quiz-dialog" id="quizDialog">
+    <article class="quiz-panel">
+      <header class="dialog-header">
+        <div>
+          <span class="eyebrow">随堂测</span>
+          <h2>辨类识药</h2>
+        </div>
+        <button class="icon-button" type="button" data-close-dialog="quizDialog" title="关闭" aria-label="关闭练习">
+          <i data-lucide="x"></i>
+        </button>
+      </header>
+      <div class="quiz-progress" aria-label="答题进度">
+        <span id="quizScore">0 题答对</span>
+        <span id="quizTotal">第 1 题</span>
+      </div>
+      <div id="quizContent"></div>
+    </article>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="herbs.js"></script>
+  <script src="herb-images.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
